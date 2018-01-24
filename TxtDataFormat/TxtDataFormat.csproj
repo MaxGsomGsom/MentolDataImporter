@@ -40,13 +40,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="DataFormat.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Interfaces\Interfaces.csproj">
-      <Project>{b8cab84b-3b1a-4760-9836-172123564dec}</Project>
-      <Name>Interfaces</Name>
+    <ProjectReference Include="..\MentolDataImporter.Interfaces\MentolDataImporter.Interfaces.csproj">
+      <Project>{9a5abe17-2a0e-4fd1-bbd9-e3a5dad26ada}</Project>
+      <Name>MentolDataImporter.Interfaces</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
