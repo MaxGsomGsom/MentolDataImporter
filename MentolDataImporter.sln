@@ -5,6 +5,12 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MentolDataImporter", "MentolDataImporter\MentolDataImporter.csproj", "{8A5DD9E0-40D1-42BA-9585-FF287462D890}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{B8CAB84B-3B1A-4760-9836-172123564DEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TxtDataFormat", "TxtDataFormat\TxtDataFormat.csproj", "{1C266928-607A-4963-A980-4F779F77B744}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PeterstarDataSource", "PeterstarDataSource\PeterstarDataSource.csproj", "{9B944517-5E6D-4020-8274-A71FDEE301A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +21,18 @@ Global
 		{8A5DD9E0-40D1-42BA-9585-FF287462D890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8A5DD9E0-40D1-42BA-9585-FF287462D890}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8A5DD9E0-40D1-42BA-9585-FF287462D890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B8CAB84B-3B1A-4760-9836-172123564DEC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8CAB84B-3B1A-4760-9836-172123564DEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B8CAB84B-3B1A-4760-9836-172123564DEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B8CAB84B-3B1A-4760-9836-172123564DEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C266928-607A-4963-A980-4F779F77B744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C266928-607A-4963-A980-4F779F77B744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C266928-607A-4963-A980-4F779F77B744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C266928-607A-4963-A980-4F779F77B744}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B944517-5E6D-4020-8274-A71FDEE301A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B944517-5E6D-4020-8274-A71FDEE301A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B944517-5E6D-4020-8274-A71FDEE301A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B944517-5E6D-4020-8274-A71FDEE301A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
