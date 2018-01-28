@@ -19,23 +19,25 @@ namespace MentolDataImporter
         const string moduleName = "DataImporter";
         List<DataFormatRecord> dataFormatsList;
         List<DataSourceRecord> dataSourcesList;
-        string dataSourcesDllsPath;
-        string dataFormatsDllsPath;
+        string dataSourcesDllsPath, dataFormatsDllsPath;
+        string dataRootPath;
+        string inputDir, outputDir, processedDir;
         int threads;
+        string separator;
 
         public DataImporter()
         {
             logger = new Logger();
 
-            dataSourcesDllsPath = ConfigurationManager.AppSettings["DataSourcesDllsPath"] ?? "DataSources";
-            if (!Path.IsPathRooted(dataSourcesDllsPath))
-                dataSourcesDllsPath = Path.Combine(Directory.GetCurrentDirectory(), dataSourcesDllsPath);
-            Directory.CreateDirectory(dataSourcesDllsPath);
+            dataSourcesDllsPath = LoadPathFromConfig("DataSourcesDllsPath", "DataSources");
+            dataFormatsDllsPath = LoadPathFromConfig("DataFormatsDllsPath", "DataFormats");
+            dataRootPath = LoadPathFromConfig("DataRootPath", "Data");
 
-            dataFormatsDllsPath = ConfigurationManager.AppSettings["DataFormatsDllsPath"] ?? "DataFormats";
-            if (!Path.IsPathRooted(dataFormatsDllsPath))
-                dataFormatsDllsPath = Path.Combine(Directory.GetCurrentDirectory(), dataFormatsDllsPath);
-            Directory.CreateDirectory(dataFormatsDllsPath);
+            inputDir = ConfigurationManager.AppSettings["InputDir"] ?? "Input";
+            outputDir = ConfigurationManager.AppSettings["OutputDir"] ?? "Output";
+            processedDir = ConfigurationManager.AppSettings["ProcessedDir"] ?? "Processed";
+
+            separator = ConfigurationManager.AppSettings["Separator"] ?? ";";
 
             try
             {
@@ -45,6 +47,16 @@ namespace MentolDataImporter
             {
                 if (threads < 1) threads = 1;
             }
+        }
+
+
+        string LoadPathFromConfig(string param, string def, string prefix = null)
+        {
+            string result = ConfigurationManager.AppSettings[param] ?? def;
+            if (!Path.IsPathRooted(result))
+                result = Path.Combine(Directory.GetCurrentDirectory(), result);
+            Directory.CreateDirectory(result);
+            return result;
         }
 
         public void ReadSourcesAndFormats()
@@ -66,6 +78,14 @@ namespace MentolDataImporter
 
             DataTable sourcesTable = ExecuteCommand("select * from DataSources", connection);
             dataSourcesList = LoadDataSources(sourcesTable, dataFormatsList);
+
+
+            foreach (DataSourceRecord item in dataSourcesList)
+            {
+                Directory.CreateDirectory(Path.Combine(dataRootPath, item.Name, inputDir));
+                Directory.CreateDirectory(Path.Combine(dataRootPath, item.Name, outputDir));
+                Directory.CreateDirectory(Path.Combine(dataRootPath, item.Name, processedDir));
+            }
 
             connection.Close();
         }
