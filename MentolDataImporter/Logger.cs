@@ -16,19 +16,21 @@ namespace MentolDataImporter
 
         public Logger()
         {
-            logFileName = ConfigurationManager.AppSettings["LogFileName"] ?? ".\\Log.txt";
+            string logPath = ConfigurationManager.AppSettings["LogsPath"] ?? "Logs";
+            if (!Path.IsPathRooted(logPath)) logPath = Path.Combine(Directory.GetCurrentDirectory(), logPath);
+            Directory.CreateDirectory(logPath);
+            logFileName = Path.Combine(logPath, DateTime.Now.ToString("dd.MM.yyyy_hh-mm-ss") + ".txt");
             writer = File.AppendText(logFileName);
         }
 
         public void Dispose()
         {
-            writer?.Flush();
             writer?.Dispose();
         }
 
         public void Error(string moduleName, string text)
         {
-            writer.WriteLineAsync(DateTime.Now.ToShortTimeString() + " - ERROR - " + moduleName + " - " + text);
+            writer.WriteLineAsync(DateTime.Now.ToString("hh:mm:tt") + " - ERROR - " + moduleName + " - " + text);
         }
 
         public void Info(string moduleName, string text)
