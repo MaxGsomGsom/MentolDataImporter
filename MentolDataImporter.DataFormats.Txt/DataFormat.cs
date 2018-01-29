@@ -10,7 +10,7 @@ namespace MentolDataImporter.DataFormats.Txt
 {
     public class DataFormat : IDataFormat
     {
-        const string moduleName = "TxtDataFormat";
+        public string GetModuleName { get; } = "TxtDataFormat";
 
         public List<string> ReadFile(string fileName, ILogger logger)
         {
@@ -18,11 +18,10 @@ namespace MentolDataImporter.DataFormats.Txt
             try
             {
                 result = File.ReadAllLines(fileName).ToList();
-                logger.Info(moduleName, "Read " + result.Count + "lines from " + Path.GetFileName(fileName));
             }
             catch
             {
-                logger.Error(moduleName, "Can't read file " + Path.GetFileName(fileName));
+                logger.Error(GetModuleName, "Can't read file");
             }
             return result;
         }

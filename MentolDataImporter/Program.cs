@@ -10,8 +10,11 @@ namespace MentolDataImporter
     {
         static void Main(string[] args)
         {
-            DataImporter imp = new DataImporter();
-            imp.ReadSourcesAndFormats();
+            DataImporter importer = new DataImporter();
+            importer.ReadSourcesAndFormats();
+            importer.RunFilesProcessing();
+
+            //TODO: extensions, encoding
         }
     }
 }

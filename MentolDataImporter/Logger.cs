@@ -9,38 +9,38 @@ using System.IO;
 
 namespace MentolDataImporter
 {
-    class Logger : ILogger, IDisposable
+    class Logger : ILogger
     {
         string logFileName;
         StreamWriter writer;
 
         public Logger()
         {
-            string logPath = ConfigurationManager.AppSettings["LogsPath"] ?? "Logs";
+            string logPath = ConfigurationManager.AppSettings["LogsPath"].Trim() ?? "Logs";
             if (!Path.IsPathRooted(logPath)) logPath = Path.Combine(Directory.GetCurrentDirectory(), logPath);
             Directory.CreateDirectory(logPath);
             logFileName = Path.Combine(logPath, DateTime.Now.ToString("dd.MM.yyyy_hh-mm-ss") + ".txt");
             writer = File.AppendText(logFileName);
         }
 
-        public void Dispose()
+        public void FlushLog()
         {
-            writer?.Dispose();
+            writer?.Flush();
         }
 
         public void Error(string moduleName, string text)
         {
-            writer.WriteLineAsync(DateTime.Now.ToString("hh:mm:tt") + " - ERROR - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - ERROR - " + moduleName + " - " + text);
         }
 
         public void Info(string moduleName, string text)
         {
-            writer.WriteLineAsync(DateTime.Now.ToShortTimeString() + " - INFO - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - INFO - " + moduleName + " - " + text);
         }
 
-        public void Warn(string moduleName, string text)
+        public void Critical(string moduleName, string text)
         {
-            writer.WriteLineAsync(DateTime.Now.ToShortTimeString() + " - WARN - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - CRITICAL - " + moduleName + " - " + text);
         }
     }
 }

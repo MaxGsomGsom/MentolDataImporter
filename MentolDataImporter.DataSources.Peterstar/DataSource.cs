@@ -10,35 +10,39 @@ namespace MentolDataImporter.DataSources.Peterstar
 {
     public class DataSource : IDataSource
     {
-        const string moduleName = "PeterstarDataFormat";
+        public string GetModuleName { get; } = "PeterstarDataFormat";
 
-        public List<string[]> Parse(List<string> data, ILogger logger, string fileName)
+        public List<string[]> Parse(List<string> data, ILogger logger)
         {
+            bool warn = false;
+
             List<string[]> result = new List<string[]>();
-            for (int i = 0; i < data.Count; i++) {
+            for (int i = 0; i < data.Count; i++)
+            {
                 if (Regex.IsMatch(data[i], @"^\d\d\d(-\d\d){2}  \d\d/\d\d  \d\d:\d\d")) //"326-66-37  02/04  09:18"
                 {
                     try
                     {
                         string[] cells = new string[7];
-                        cells[0] = data[i].Substring(0, 9); //phone number
-                        cells[1] = data[i].Substring(12, 5); //data
-                        cells[2] = data[i].Substring(19, 5); //time
-                        cells[3] = data[i].Substring(26, 21).Trim(); //phone number
-                        cells[4] = data[i].Substring(49, 21).Trim(); //location
-                        cells[5] = data[i].Substring(72, 5); //time
-                        cells[6] = data[i].Substring(79, 25).Trim(); //price
+                        cells[0] = data[i].Substring(0, 9).Trim(); //phone number
+                        cells[1] = data[i].Substring(11, 5).Trim(); //data
+                        cells[2] = data[i].Substring(18, 5).Trim(); //time
+                        cells[3] = data[i].Substring(25, 21).Trim(); //phone number
+                        cells[4] = data[i].Substring(48, 21).Trim(); //location and operator
+                        cells[5] = data[i].Substring(71, 5).Trim(); //time
+                        cells[6] = data[i].Substring(78, 25).Trim(); //price
 
                         result.Add(cells);
                     }
                     catch
                     {
-                        logger.Warn(moduleName, "Can't parse line " + i + " from file " + fileName);
+                        logger.Error(GetModuleName, "Can't parse at least line " + i);
+                        return null;
                     }
                 }
             }
-
             return result;
         }
+
     }
 }
