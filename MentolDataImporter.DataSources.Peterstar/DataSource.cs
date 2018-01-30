@@ -14,9 +14,8 @@ namespace MentolDataImporter.DataSources.Peterstar
 
         public List<string[]> Parse(List<string> data, ILogger logger)
         {
-            bool warn = false;
-
             List<string[]> result = new List<string[]>();
+
             for (int i = 0; i < data.Count; i++)
             {
                 if (Regex.IsMatch(data[i], @"^\d\d\d(-\d\d){2}  \d\d/\d\d  \d\d:\d\d")) //"326-66-37  02/04  09:18"
@@ -24,13 +23,13 @@ namespace MentolDataImporter.DataSources.Peterstar
                     try
                     {
                         string[] cells = new string[7];
-                        cells[0] = data[i].Substring(0, 9).Trim(); //phone number
-                        cells[1] = data[i].Substring(11, 5).Trim(); //data
-                        cells[2] = data[i].Substring(18, 5).Trim(); //time
-                        cells[3] = data[i].Substring(25, 21).Trim(); //phone number
-                        cells[4] = data[i].Substring(48, 21).Trim(); //location and operator
-                        cells[5] = data[i].Substring(71, 5).Trim(); //time
-                        cells[6] = data[i].Substring(78, 25).Trim(); //price
+                        cells[0] = data[i].Substring(0, 9).Trim(); //Line
+                        cells[1] = data[i].Substring(11, 5).Trim(); //Date
+                        cells[2] = data[i].Substring(18, 5).Trim(); //Time
+                        cells[3] = data[i].Substring(25, 21).Trim(); //Called Number
+                        cells[4] = data[i].Substring(48, 21).Trim(); //Destinat
+                        cells[5] = data[i].Substring(71, 5).Trim(); //Duration
+                        cells[6] = data[i].Substring(78, 25).Trim(); //Cost
 
                         result.Add(cells);
                     }

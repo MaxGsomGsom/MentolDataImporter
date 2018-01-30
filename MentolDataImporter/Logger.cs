@@ -13,6 +13,7 @@ namespace MentolDataImporter
     {
         string logFileName;
         StreamWriter writer;
+        bool errorOccurred = false;
 
         public Logger()
         {
@@ -30,17 +31,24 @@ namespace MentolDataImporter
 
         public void Error(string moduleName, string text)
         {
-            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - ERROR - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " - ERROR - " + moduleName + " - " + text);
+            if (!errorOccurred)
+            {
+                ErrorOccurredWarning(this, new EventArgs());
+                errorOccurred = true;
+            }
         }
 
         public void Info(string moduleName, string text)
         {
-            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - INFO - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " - INFO - " + moduleName + " - " + text);
         }
 
         public void Critical(string moduleName, string text)
         {
-            writer?.WriteLine(DateTime.Now.ToString("hh:mm:tt") + " - CRITICAL - " + moduleName + " - " + text);
+            writer?.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " - CRITICAL - " + moduleName + " - " + text);
         }
+
+        public event EventHandler ErrorOccurredWarning;
     }
 }

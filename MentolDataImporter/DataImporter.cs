@@ -10,14 +10,17 @@ using MentolDataImporter.Interfaces;
 using System.Reflection;
 using System.IO;
 using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace MentolDataImporter
 {
     class DataImporter
     {
-        Logger logger;
-        SqlConnection connection;
+        public Logger Logger { get; private set; }
         public string GetModuleName { get; } = "DataImporter";
+        public bool IsRunning { get; private set; } = false;
+
+        SqlConnection connection;
         List<DataFormatRecord> dataFormatsList;
         List<DataSourceRecord> dataSourcesList;
         string dataSourcesDllsPath, dataFormatsDllsPath;
@@ -27,31 +30,38 @@ namespace MentolDataImporter
         string separator;
         Queue<Task> tasksQueue;
         Semaphore tasksCountLimiter;
-
-        public bool IsRunning { get; private set; } = false;
-
+        Encoding outputEncoding;
 
         public DataImporter()
         {
-            logger = new Logger();
-
-            dataSourcesDllsPath = LoadPathFromConfig("DataSourcesDllsPath", "DataSources");
-            dataFormatsDllsPath = LoadPathFromConfig("DataFormatsDllsPath", "DataFormats");
-            dataRootPath = LoadPathFromConfig("DataRootPath", "Data");
-
-            inputDir = ConfigurationManager.AppSettings["InputDir"].Trim() ?? "Input";
-            outputDir = ConfigurationManager.AppSettings["OutputDir"].Trim() ?? "Output";
-            processedDir = ConfigurationManager.AppSettings["ProcessedDir"].Trim() ?? "Processed";
-
-            separator = ConfigurationManager.AppSettings["Separator"] ?? ";";
+            Logger = new Logger();
 
             try
             {
-                threads = Convert.ToInt32(ConfigurationManager.AppSettings["ThreadsCount"]);
+                dataSourcesDllsPath = LoadPathFromConfig("DataSourcesDllsPath", "DataSources");
+                dataFormatsDllsPath = LoadPathFromConfig("DataFormatsDllsPath", "DataFormats");
+                dataRootPath = LoadPathFromConfig("DataRootPath", "Data");
+
+                inputDir = ConfigurationManager.AppSettings["InputDir"].Trim() ?? "Input";
+                outputDir = ConfigurationManager.AppSettings["OutputDir"].Trim() ?? "Output";
+                processedDir = ConfigurationManager.AppSettings["ProcessedDir"].Trim() ?? "Processed";
+
+                separator = ConfigurationManager.AppSettings["Separator"] ?? ";";
+                outputEncoding = Encoding.GetEncoding(ConfigurationManager.AppSettings["OutputEncoding"]);
+
+                try
+                {
+                    threads = Convert.ToInt32(ConfigurationManager.AppSettings["ThreadsCount"]);
+                }
+                finally
+                {
+                    if (threads < 1) threads = 1;
+                }
             }
-            finally
+            catch (Exception ex)
             {
-                if (threads < 1) threads = 1;
+                Logger.Critical(GetModuleName, "Error during initialization. App.config has wrong parameters");
+                throw ex;
             }
 
             tasksQueue = new Queue<Task>();
@@ -82,7 +92,7 @@ namespace MentolDataImporter
             }
             finally
             {
-                logger.FlushLog();
+                Logger.FlushLog();
                 IsRunning = false;
             }
         }
@@ -93,7 +103,20 @@ namespace MentolDataImporter
             foreach (DataSourceRecord item in dataSourcesList)
             {
                 string inputPath = Path.Combine(dataRootPath, item.Name, inputDir);
-                string[] files = Directory.GetFiles(inputPath);
+                List<string> files = new List<string>();
+
+                //Add files to processing list according to extensions
+                if (item.FormatRecord.Extensions == null || item.FormatRecord.Extensions.Length == 0)
+                {
+                    files.AddRange(Directory.GetFiles(inputPath));
+                }
+                else
+                {
+                    foreach (string ext in item.FormatRecord.Extensions)
+                    {
+                        files.AddRange(Directory.GetFiles(inputPath, ext));
+                    }
+                }
 
                 foreach (string fileName in files)
                 {
@@ -118,7 +141,7 @@ namespace MentolDataImporter
 
         void ProcessFile(DataSourceRecord record, string fileName)
         {
-            logger.Info(GetModuleName, "Started processing of file '" + fileName + "'");
+            Logger.Info(GetModuleName, "Started processing of file '" + fileName + "'");
 
             //Read file and convert it to list of strings
             string inputFilePath = Path.Combine(dataRootPath, record.Name, inputDir, fileName);
@@ -128,16 +151,16 @@ namespace MentolDataImporter
 
             try
             {
-                rawStrings = dataFormat.ReadFile(inputFilePath, logger);
+                rawStrings = dataFormat.ReadFile(inputFilePath, Logger, record.Encoding);
                 if (rawStrings == null || rawStrings.Count == 0)
                     throw new IOException(errorMessageDataFormat);
 
-                logger.Info(dataFormat.GetModuleName, "Read " + rawStrings.Count + " lines from file '" + fileName + "'");
+                Logger.Info(dataFormat.GetModuleName, "Read " + rawStrings.Count + " lines from file '" + fileName + "'");
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Error(dataFormat.GetModuleName, errorMessageDataFormat);
-                throw ex;
+                Logger.Error(dataFormat.GetModuleName, errorMessageDataFormat);
+                return;
             }
 
             //Parse list of strings to final view
@@ -146,15 +169,15 @@ namespace MentolDataImporter
             IDataSource dataSource = record.SourceObj;
             try
             {
-                processedStrings = dataSource.Parse(rawStrings, logger);
+                processedStrings = dataSource.Parse(rawStrings, Logger);
                 if (processedStrings == null || processedStrings.Count == 0)
                     throw new InvalidDataException(errorMessageSource);
-                logger.Info(dataSource.GetModuleName, "Parsed " + processedStrings.Count + " lines from file '" + fileName + "'");
+                Logger.Info(dataSource.GetModuleName, "Parsed " + processedStrings.Count + " lines from file '" + fileName + "'");
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Error(dataSource.GetModuleName, errorMessageSource);
-                throw ex;
+                Logger.Error(dataSource.GetModuleName, errorMessageSource);
+                return;
             }
 
             //Write strings to output file, move input file to processed
@@ -185,20 +208,21 @@ namespace MentolDataImporter
                 n = 1;
                 while (File.Exists(tempPath))
                 {
-                    tempPath = Path.Combine(Path.GetDirectoryName(processedFilePath), 
+                    tempPath = Path.Combine(Path.GetDirectoryName(processedFilePath),
                         Path.GetFileNameWithoutExtension(processedFilePath) + "_" + n + Path.GetExtension(processedFilePath));
                     n++;
                 }
                 processedFilePath = tempPath;
 
-                File.WriteAllLines(outputFilePath, joinedStrings);
+                if (outputEncoding == null) File.WriteAllLines(outputFilePath, joinedStrings);
+                else File.WriteAllLines(outputFilePath, joinedStrings, outputEncoding);
                 File.Move(inputFilePath, processedFilePath);
-                logger.Info(GetModuleName, "Written " + joinedStrings.Count() + " lines to file '" + Path.GetFileName(outputFilePath) + "'");
+                Logger.Info(GetModuleName, "Written " + joinedStrings.Count() + " lines to file '" + Path.GetFileName(outputFilePath) + "'");
             }
-            catch (Exception ex)
+            catch
             {
-                logger.Error(GetModuleName, "There is an error while writing processed file '" + fileName + "'");
-                throw ex;
+                Logger.Error(GetModuleName, "There is an error while writing processed file '" + fileName + "'");
+                return;
             }
         }
 
@@ -222,7 +246,7 @@ namespace MentolDataImporter
             }
             catch (Exception ex)
             {
-                logger.Critical(GetModuleName, "Can't connect to DB ");
+                Logger.Critical(GetModuleName, "Can't connect to DB ");
                 connection?.Dispose();
                 throw ex;
             }
@@ -262,7 +286,7 @@ namespace MentolDataImporter
             }
             catch (Exception ex)
             {
-                logger.Critical(GetModuleName, "Can't execute query to DB");
+                Logger.Critical(GetModuleName, "Can't execute query to DB");
                 throw ex;
             }
 
@@ -284,6 +308,29 @@ namespace MentolDataImporter
 
                     string dllPath = Path.Combine(dataFormatsDllsPath, record.DllFileName);
                     record.FormatObj = LoadDllAndCreateObjectInstance<IDataFormat>(dllPath);
+
+                    //Parse extensions list
+                    string extLine = line.Field<string>("Extensions");
+                    if (extLine != null && extLine.Length > 0)
+                    {
+                        var allExt = extLine.Split(',');
+                        List<string> goodExt = new List<string>();
+
+                        foreach (string ext in allExt)
+                        {
+                            if (!Regex.IsMatch(ext, "[\\/:\"<>|]+")) //Forbidden filename symbols except ? and *
+                                goodExt.Add(ext.Trim());
+                        }
+                        if (goodExt.Count > 0) record.Extensions = allExt.ToArray();
+                        else
+                        {
+                            string errMsg = "It seems there is an error in defenition of extensions for data format '" + record.Name + "'";
+                            Logger.Critical(GetModuleName, errMsg);
+                            throw new SyntaxErrorException(errMsg);
+                        }
+                    }
+                    else record.Extensions = null;
+
                     dataFormatsList.Add(record);
                 }
             }
@@ -311,9 +358,24 @@ namespace MentolDataImporter
                     if (record.FormatRecord.FormatObj == null)
                     {
                         string message = "Can't find specific DataFormat for DataSource with name " + record.Name;
-                        logger.Critical(GetModuleName, message);
+                        Logger.Critical(GetModuleName, message);
                         throw new KeyNotFoundException();
                     }
+
+                    //Parse encoding of files
+                    string encLine = line.Field<string>("Encoding");
+                    if (encLine != null && encLine.Length > 0)
+                    {
+                        Encoding enc = Encoding.GetEncoding(encLine.Trim().ToLowerInvariant());
+                        if (enc == null)
+                        {
+                            string errMsg = "It seems there is an error in defenition of encoding for data source '" + record.Name + "'";
+                            Logger.Critical(GetModuleName, errMsg);
+                            throw new SyntaxErrorException(errMsg);
+                        }
+                        else record.Encoding = enc;
+                    }
+                    else record.Encoding = null;
 
                     dataSourcesList.Add(record);
                 }
@@ -332,7 +394,7 @@ namespace MentolDataImporter
             }
             catch (Exception ex)
             {
-                logger.Critical(GetModuleName, "Can't load dll " + dllPath);
+                Logger.Critical(GetModuleName, "Can't load dll " + dllPath);
                 throw ex;
             }
 
@@ -343,7 +405,7 @@ namespace MentolDataImporter
             }
 
             string message = "Can't find type " + typeof(T).ToString() + " in " + dllPath;
-            logger.Critical(GetModuleName, message);
+            Logger.Critical(GetModuleName, message);
             throw new TypeLoadException(message);
         }
     }
@@ -356,6 +418,7 @@ namespace MentolDataImporter
         public string DllFileName;
         public IDataSource SourceObj;
         public DataFormatRecord FormatRecord;
+        public Encoding Encoding;
 
         public override bool Equals(object obj)
         {
@@ -373,6 +436,7 @@ namespace MentolDataImporter
         public int Id;
         public string Name;
         public string DllFileName;
+        public string[] Extensions;
         public IDataFormat FormatObj;
 
         public override bool Equals(object obj)

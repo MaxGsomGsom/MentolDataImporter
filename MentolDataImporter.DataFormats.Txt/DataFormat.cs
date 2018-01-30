@@ -12,16 +12,17 @@ namespace MentolDataImporter.DataFormats.Txt
     {
         public string GetModuleName { get; } = "TxtDataFormat";
 
-        public List<string> ReadFile(string fileName, ILogger logger)
+        public List<string> ReadFile(string fileName, ILogger logger, Encoding encoding = null)
         {
             List<string> result = null;
             try
             {
-                result = File.ReadAllLines(fileName).ToList();
+                if (encoding == null) result = File.ReadAllLines(fileName).ToList();
+                else result = File.ReadAllLines(fileName, encoding).ToList();
             }
-            catch
+            catch (Exception ex)
             {
-                logger.Error(GetModuleName, "Can't read file");
+                logger.Error(GetModuleName, "Can't read file: " + ex.Message);
             }
             return result;
         }
