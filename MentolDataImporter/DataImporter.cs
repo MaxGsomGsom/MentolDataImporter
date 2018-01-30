@@ -14,10 +14,24 @@ using System.Text.RegularExpressions;
 
 namespace MentolDataImporter
 {
+    /// <summary>
+    /// Main module of Mentol importer
+    /// </summary>
     class DataImporter
     {
+        /// <summary>
+        /// Writes log file
+        /// </summary>
         public Logger Logger { get; private set; }
+
+        /// <summary>
+        /// Current module name. Used for logging
+        /// </summary>
         public string GetModuleName { get; } = "DataImporter";
+
+        /// <summary>
+        /// Indicates if some files being processed now
+        /// </summary>
         public bool IsRunning { get; private set; } = false;
 
         SqlConnection connection;
@@ -32,6 +46,10 @@ namespace MentolDataImporter
         Semaphore tasksCountLimiter;
         Encoding outputEncoding;
 
+
+        /// <summary>
+        /// Create instance and read setting from App.config
+        /// </summary>
         public DataImporter()
         {
             Logger = new Logger();
@@ -169,7 +187,7 @@ namespace MentolDataImporter
             IDataSource dataSource = record.SourceObj;
             try
             {
-                processedStrings = dataSource.Parse(rawStrings, Logger);
+                processedStrings = dataSource.ParseStrings(rawStrings, Logger);
                 if (processedStrings == null || processedStrings.Count == 0)
                     throw new InvalidDataException(errorMessageSource);
                 Logger.Info(dataSource.GetModuleName, "Parsed " + processedStrings.Count + " lines from file '" + fileName + "'");
@@ -422,7 +440,7 @@ namespace MentolDataImporter
 
         public override bool Equals(object obj)
         {
-            return ((DataFormatRecord)obj).Name == Name;
+            return ((DataSourceRecord)obj).Name == Name;
         }
 
         public override int GetHashCode()

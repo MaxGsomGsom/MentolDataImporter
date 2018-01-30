@@ -15,6 +15,9 @@ namespace MentolDataImporter
         StreamWriter writer;
         bool errorOccurred = false;
 
+        /// <summary>
+        /// Default logger implementation
+        /// </summary>
         public Logger()
         {
             string logPath = ConfigurationManager.AppSettings["LogsPath"].Trim() ?? "Logs";
@@ -24,6 +27,9 @@ namespace MentolDataImporter
             writer = File.AppendText(logFileName);
         }
 
+        /// <summary>
+        /// Writes all pending messages to file. Use before close log file
+        /// </summary>
         public void FlushLog()
         {
             writer?.Flush();
@@ -34,7 +40,7 @@ namespace MentolDataImporter
             writer?.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " - ERROR - " + moduleName + " - " + text);
             if (!errorOccurred)
             {
-                ErrorOccurredWarning(this, new EventArgs());
+                OnErrorOccurredWarning(this, new EventArgs());
                 errorOccurred = true;
             }
         }
@@ -49,6 +55,9 @@ namespace MentolDataImporter
             writer?.WriteLine(DateTime.Now.ToString("hh:mm:ss") + " - CRITICAL - " + moduleName + " - " + text);
         }
 
-        public event EventHandler ErrorOccurredWarning;
+        /// <summary>
+        /// Triggered when fist error occurs
+        /// </summary>
+        public event EventHandler OnErrorOccurredWarning;
     }
 }

@@ -8,11 +8,14 @@ using System.Text.RegularExpressions;
 
 namespace MentolDataImporter.DataSources.Peterstar
 {
+    /// <summary>
+    /// Parses Peterstar txt files
+    /// </summary>
     public class DataSource : IDataSource
     {
-        public string GetModuleName { get; } = "PeterstarDataFormat";
+        public string GetModuleName { get; } = "PeterstarDataSource";
 
-        public List<string[]> Parse(List<string> data, ILogger logger)
+        public List<string[]> ParseStrings(List<string> data, ILogger logger)
         {
             List<string[]> result = new List<string[]>();
 
@@ -27,7 +30,7 @@ namespace MentolDataImporter.DataSources.Peterstar
                         cells[1] = data[i].Substring(11, 5).Trim(); //Date
                         cells[2] = data[i].Substring(18, 5).Trim(); //Time
                         cells[3] = data[i].Substring(25, 21).Trim(); //Called Number
-                        cells[4] = data[i].Substring(48, 21).Trim(); //Destinat
+                        cells[4] = data[i].Substring(48, 21).Trim(); //Destination
                         cells[5] = data[i].Substring(71, 5).Trim(); //Duration
                         cells[6] = data[i].Substring(78, 25).Trim(); //Cost
 

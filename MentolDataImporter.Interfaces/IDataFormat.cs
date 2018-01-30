@@ -22,7 +22,7 @@ namespace MentolDataImporter.Interfaces
         List<string> ReadFile(string fileName, ILogger logger, Encoding encoding = null);
 
         /// <summary>
-        /// Returns name of current module
+        /// Current module name. Used for logging
         /// </summary>
         string GetModuleName { get; }
     }

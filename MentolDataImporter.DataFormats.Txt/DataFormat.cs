@@ -8,6 +8,9 @@ using System.IO;
 
 namespace MentolDataImporter.DataFormats.Txt
 {
+    /// <summary>
+    /// Reads any text file with given encoding
+    /// </summary>
     public class DataFormat : IDataFormat
     {
         public string GetModuleName { get; } = "TxtDataFormat";

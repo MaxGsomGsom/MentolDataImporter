@@ -12,11 +12,13 @@ namespace MentolDataImporter
         {
             DataImporter importer = new DataImporter();
 
-            importer.Logger.ErrorOccurredWarning += (obj, e) => 
+            importer.Logger.OnErrorOccurredWarning += (obj, e) => 
             { Console.WriteLine("One or more errors occurred. See log for details"); };
 
             importer.ReadSourcesAndFormats();
             importer.RunFilesProcessing();
+
+            Console.ReadKey();
         }
     }
 }

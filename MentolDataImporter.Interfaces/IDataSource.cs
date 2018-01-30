@@ -18,10 +18,10 @@ namespace MentolDataImporter.Interfaces
         /// <param name="data">Array of raw strings</param>
         /// <param name="logger">Logger object</param>
         /// <returns>List of strings divided on cells in utf16 encoding</returns>
-        List<string[]> Parse(List<string> data, ILogger logger);
+        List<string[]> ParseStrings(List<string> data, ILogger logger);
 
         /// <summary>
-        /// Returns name of current module
+        /// Current module name. Used for logging
         /// </summary>
         string GetModuleName { get; }
     }
